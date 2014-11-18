@@ -1,10 +1,14 @@
-package ru.spbstu.telematics.lecture6;
+package ru.spbstu.telematics.lecture8;
 
 import java.util.Random;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
-public class Bank {
-	private Account a = new Account(50);
-	private Account b = new Account(50);
+public class Bank2 {
+	private Account2 a = new Account2(50);
+	private Account2 b = new Account2(50);
+
+	Lock lock = new ReentrantLock();
 
 	private class BankProcess implements Runnable {
 		Random r = new Random();
@@ -26,7 +30,7 @@ public class Bank {
 	}
 
 	public static void main(String[] args) {
-		new Bank().start();
+		new Bank2().start();
 	}
 
 	private void start() {
@@ -39,10 +43,17 @@ public class Bank {
 				+ ", sum=" + (a.getAmount() + b.getAmount()));
 	}
 
-	private  synchronized void transfer(Account buyer, Account seller, int val) {
-		if (buyer.canBuy(val)) {
-			buyer.buy(val);
-			seller.sell(val);
+	private void transfer(Account2 buyer, Account2 seller, int val) {
+
+		while (lock.tryLock()) {
+			try {
+				if (buyer.canBuy(val)) {
+					buyer.buy(val);
+					seller.sell(val);
+				}
+			} finally {
+				lock.unlock();
+			}
 		}
 	}
 
